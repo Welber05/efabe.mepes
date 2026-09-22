@@ -1,0 +1,8 @@
+{
+  "name": "EFABE",
+  "description": "Website institucional e portal escolar para a EFABE (Escola Família Agrícola) com área pública, painel administrativo CMS, comunicados, rotina escolar e portais exclusivos para pais e professores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #fcf9f2;
+    color: #1c1c18;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Epilogue', sans-serif;
+  }
+}
+
+.font-heading {
+  font-family: 'Epilogue', sans-serif;
+}
+
+.font-body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Custom Earth Ambient Shadow */
+.shadow-earth {
+  box-shadow: 0 8px 24px -4px rgba(74, 40, 16, 0.08);
+}
+
+.shadow-earth-lg {
+  box-shadow: 0 16px 32px -6px rgba(74, 40, 16, 0.12);
+}
+
+/* Parchment / Soft Surface Borders */
+.border-earth-subtle {
+  border-color: rgba(107, 66, 38, 0.12);
+}
+
