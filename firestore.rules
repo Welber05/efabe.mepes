@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/cmsUsers/$(request.auth.uid));
+    }
+
+    function isEditor() {
+      return signedIn()
+        && userProfile().data.active == true
+        && userProfile().data.role in ['admin', 'editor'];
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && userProfile().data.active == true
+        && userProfile().data.role == 'admin';
+    }
+
+    match /cmsPages/{pageId} {
+      allow read: if resource.data.status == 'published' || isEditor();
+      allow create, update, delete: if isEditor();
+    }
+
+    match /cmsMedia/{assetId} {
+      allow read: if true;
+      allow create, update, delete: if isEditor();
+    }
+
+    match /cmsUsers/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

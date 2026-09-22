@@ -2,6 +2,8 @@ export type Role = 'guest' | 'admin' | 'teacher' | 'parent';
 
 export interface User {
   id: string;
+  firebaseUid?: string;
+  allowedAreas?: import('./auth/access').AccessArea[];
   name: string;
   email: string;
   role: Role;
@@ -102,12 +104,50 @@ export interface MenuItem {
 
 export interface ContentBlock {
   id: string;
-  type: 'text' | 'image' | 'features' | 'quote' | 'alert';
+  type: 'text' | 'image' | 'features' | 'quote' | 'alert' | 'video' | 'document' | 'spacer' | 'columns' | 'button' | 'gallery' | 'slideshow';
   title?: string;
   content: string;
   imageUrl?: string;
   caption?: string;
   hidden?: boolean;
+  mediaUrl?: string;
+  images?: string[];
+  mediaType?: 'image' | 'youtube' | 'pdf' | 'document' | 'drive' | 'video';
+  buttonLabel?: string;
+  buttonUrl?: string;
+  openInNewTab?: boolean;
+  style?: BlockStyle;
+  mobileStyle?: Partial<BlockStyle>;
+  metadata?: Record<string, string | number | boolean | undefined>;
+}
+
+export interface BlockStyle {
+  backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  width?: 'narrow' | 'content' | 'wide' | 'full';
+  paddingY?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  paddingX?: 'none' | 'sm' | 'md' | 'lg';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'pill';
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  imageFit?: 'cover' | 'contain';
+  imagePosition?: 'left' | 'center' | 'right';
+  minHeight?: number;
+}
+
+export interface MediaAsset {
+  id: string;
+  name: string;
+  url: string;
+  kind: 'image' | 'youtube' | 'pdf' | 'document' | 'drive' | 'video';
+  mimeType?: string;
+  thumbnailUrl?: string;
+  driveFileId?: string;
+  alt?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface PageContent {
@@ -122,6 +162,12 @@ export interface PageContent {
   blocks?: ContentBlock[];
   updatedAt: string;
   isCustom?: boolean;
+  status?: 'draft' | 'published' | 'archived';
+  publishedAt?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  showHero?: boolean;
+  pageBackground?: string;
 }
 
 export interface StudentGrade {

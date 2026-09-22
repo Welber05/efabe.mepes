@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, MenuItem, SiteHeaderFooterSettings } from '../types';
+import { canAccess, canAccessAdmin } from '../auth/access';
 import { 
   GraduationCap, 
   UserCheck, 
@@ -27,8 +28,6 @@ interface HeaderProps {
   setActiveTab: (tab: string) => void;
   onOpenLogin: () => void;
   onLogout: () => void;
-  onSelectUser: (user: User) => void;
-  usersList: User[];
   menuItems: MenuItem[];
   siteSettings?: SiteHeaderFooterSettings;
   onGoToAdmin?: (tabSlug: string) => void;
@@ -40,14 +39,11 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onOpenLogin,
   onLogout,
-  onSelectUser,
-  usersList,
   menuItems,
   siteSettings,
   onGoToAdmin,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [quickSwitchOpen, setQuickSwitchOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
 
   // Fallback defaults
@@ -421,7 +417,7 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {currentUser.role === 'admin' && (
+                        {canAccessAdmin(currentUser) && (
                           <button
                             onClick={() => {
                               setActiveTab('admin-dashboard');
@@ -433,7 +429,7 @@ export const Header: React.FC<HeaderProps> = ({
                           </button>
                         )}
 
-                        {currentUser.role === 'teacher' && (
+                        {canAccess(currentUser, 'teacher-portal') && (
                           <button
                             onClick={() => {
                               setActiveTab('teacher-portal');
@@ -445,7 +441,7 @@ export const Header: React.FC<HeaderProps> = ({
                           </button>
                         )}
 
-                        {currentUser.role === 'parent' && (
+                        {canAccess(currentUser, 'parent-portal') && (
                           <button
                             onClick={() => {
                               setActiveTab('parent-portal');
@@ -585,7 +581,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                   {getRoleBadge(currentUser.role)}
                 </div>
-                {currentUser.role === 'admin' && (
+                {canAccessAdmin(currentUser) && (
                   <button
                     onClick={() => { setActiveTab('admin-dashboard'); setMobileMenuOpen(false); }}
                     className="w-full bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2"
@@ -593,7 +589,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <ShieldCheck size={18} /> Painel de Gestão do Site
                   </button>
                 )}
-                {currentUser.role === 'teacher' && (
+                {canAccess(currentUser, 'teacher-portal') && (
                   <button
                     onClick={() => { setActiveTab('teacher-portal'); setMobileMenuOpen(false); }}
                     className="w-full bg-blue-800 text-white font-bold py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2"
@@ -601,7 +597,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <BookOpen size={18} /> Portal do Professor
                   </button>
                 )}
-                {currentUser.role === 'parent' && (
+                {canAccess(currentUser, 'parent-portal') && (
                   <button
                     onClick={() => { setActiveTab('parent-portal'); setMobileMenuOpen(false); }}
                     className="w-full bg-amber-700 text-white font-bold py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2"

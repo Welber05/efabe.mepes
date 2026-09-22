@@ -28,12 +28,16 @@ import { AcervoFotograficoView } from './components/public/AcervoFotograficoView
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { TeacherPortal } from './components/teacher/TeacherPortal';
 import { ParentPortal } from './components/parent/ParentPortal';
+import { deleteCmsPage, saveCmsPage, subscribeCmsPages } from './cms/firebaseRepository';
+import { isFirebaseConfigured } from './lib/firebase';
+import { firebaseAuth } from './lib/firebase';
+import { signOut } from 'firebase/auth';
+import { AccessArea, canAccess, canAccessAdmin } from './auth/access';
 
 export default function App() {
   // Current user state with local persistence
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('mepes_user');
-    return saved ? JSON.parse(saved) : INITIAL_USERS[0]; // Default logged in as Admin for easy demo
+    return null;
   });
 
   // Active navigation tab
@@ -179,10 +183,6 @@ export default function App() {
 
   // Save changes to localStorage
   useEffect(() => {
-    localStorage.setItem('mepes_user', JSON.stringify(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
     localStorage.setItem('mepes_site_settings', JSON.stringify(siteSettings));
   }, [siteSettings]);
 
@@ -234,6 +234,24 @@ export default function App() {
     localStorage.setItem('mepes_drive_config', JSON.stringify(driveConfig));
   }, [driveConfig]);
 
+  // Quando o Firebase estiver configurado, o Firestore passa a ser a fonte
+  // compartilhada do CMS. O localStorage continua como cache/offline fallback.
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    return subscribeCmsPages(
+      (cloudPages) => {
+        if (!cloudPages.length) return;
+        setPages((localPages) => {
+          const cloudById = new Map(cloudPages.map((page) => [page.id, page]));
+          const merged = localPages.map((page) => cloudById.get(page.id) || page);
+          const localIds = new Set(localPages.map((page) => page.id));
+          return [...merged, ...cloudPages.filter((page) => !localIds.has(page.id))];
+        });
+      },
+      (error) => console.error('Não foi possível sincronizar as páginas do CMS:', error),
+    );
+  }, []);
+
   // Handlers for Acervo Documental & Fotografico
   const handleAddDocument = (doc: DocumentItem) => {
     setDocuments((prev) => [doc, ...prev]);
@@ -262,12 +280,14 @@ export default function App() {
   // Handlers
   const handleSelectUser = (user: User) => {
     setCurrentUser(user);
-    if (user.role === 'admin') setActiveTab('admin-dashboard');
-    else if (user.role === 'teacher') setActiveTab('teacher-portal');
-    else if (user.role === 'parent') setActiveTab('parent-portal');
+    if (canAccessAdmin(user)) setActiveTab('admin-dashboard');
+    else if (canAccess(user, 'teacher-portal')) setActiveTab('teacher-portal');
+    else if (canAccess(user, 'parent-portal')) setActiveTab('parent-portal');
+    else setActiveTab('home');
   };
 
   const handleLogout = () => {
+    if (firebaseAuth) void signOut(firebaseAuth);
     setCurrentUser(null);
     setActiveTab('home');
   };
@@ -277,14 +297,18 @@ export default function App() {
     setMenuItems((prev) =>
       prev.map((m) => (m.slug === updatedPage.slug ? { ...m, label: updatedPage.title } : m))
     );
+    if (isFirebaseConfigured) void saveCmsPage(updatedPage);
   };
 
   const handleAddPage = (newPage: PageContent) => {
     setPages((prev) => [...prev, newPage]);
+    if (isFirebaseConfigured) void saveCmsPage(newPage);
   };
 
   const handleDeletePage = (slug: string) => {
+    const pageToDelete = pages.find((page) => page.slug === slug);
     setPages((prev) => prev.filter((p) => p.slug !== slug));
+    if (isFirebaseConfigured && pageToDelete) void deleteCmsPage(pageToDelete.id);
   };
 
   const handleAddMenuItem = (newItem: MenuItem) => {
@@ -384,6 +408,7 @@ export default function App() {
 
   const handleUpdateUser = (updatedUser: User) => {
     setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    setCurrentUser((current) => current?.id === updatedUser.id ? updatedUser : current);
   };
 
   const handleDeleteUser = (id: string) => {
@@ -409,9 +434,19 @@ export default function App() {
   };
 
   const handleGoToAdminTab = (tabSlug?: string) => {
+    if (!canAccessAdmin(currentUser) || (tabSlug && !canAccess(currentUser, tabSlug as AccessArea))) {
+      setIsLoginOpen(true);
+      return;
+    }
     if (tabSlug) setAdminInitialTab(tabSlug);
     setActiveTab('admin-dashboard');
   };
+
+  const protectedTab = activeTab === 'admin-dashboard' || activeTab === 'teacher-portal' || activeTab === 'parent-portal';
+  const authorizedTab =
+    (activeTab === 'admin-dashboard' && canAccessAdmin(currentUser)) ||
+    (activeTab === 'teacher-portal' && canAccess(currentUser, 'teacher-portal')) ||
+    (activeTab === 'parent-portal' && canAccess(currentUser, 'parent-portal'));
 
   return (
     <div className="min-h-screen flex flex-col font-sans antialiased text-slate-900 bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
@@ -423,8 +458,6 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenLogin={() => setIsLoginOpen(true)}
         onLogout={handleLogout}
-        onSelectUser={handleSelectUser}
-        usersList={users}
         menuItems={menuItems}
         siteSettings={siteSettings}
         onGoToAdmin={handleGoToAdminTab}
@@ -432,8 +465,15 @@ export default function App() {
 
       {/* Main Content Render Based on activeTab */}
       <main className="flex-1">
-        {activeTab === 'admin-dashboard' ? (
+        {protectedTab && !authorizedTab ? (
+          <div className="max-w-xl mx-auto my-16 p-8 bg-white border border-emerald-100 rounded-2xl text-center shadow-sm">
+            <h1 className="text-xl font-bold text-emerald-950">Acesso restrito</h1>
+            <p className="text-sm text-slate-600 mt-2">Entre com sua conta para abrir este painel.</p>
+            <button onClick={() => setIsLoginOpen(true)} className="mt-5 px-5 py-2.5 bg-emerald-700 text-white rounded-xl font-bold">Entrar</button>
+          </div>
+        ) : activeTab === 'admin-dashboard' ? (
           <AdminDashboard
+            currentUser={currentUser!}
             pages={pages}
             onUpdatePage={handleUpdatePage}
             onAddPage={handleAddPage}

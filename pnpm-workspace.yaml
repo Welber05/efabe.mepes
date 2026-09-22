@@ -1,0 +1,14 @@
+packages:
+  - .
+
+allowBuilds:
+  '@firebase/util': true
+  '@google/genai': true
+  esbuild: true
+  protobufjs: true
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@google/genai'
+  - esbuild
+  - protobufjs

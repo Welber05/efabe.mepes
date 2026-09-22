@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PageContent, Notice, RoutinePhoto, User, MenuItem, ContentBlock, SiteHeaderFooterSettings } from '../../types';
 import { RichTextEditor } from './RichTextEditor';
+import { ProfessionalSiteBuilder } from './ProfessionalSiteBuilder';
+import { ACCESS_AREAS, AccessArea, canAccess, defaultAreasForRole } from '../../auth/access';
 import { 
   ShieldCheck, 
   Edit3, 
@@ -49,6 +51,7 @@ import {
 } from 'lucide-react';
 
 interface AdminDashboardProps {
+  currentUser: User;
   pages: PageContent[];
   onUpdatePage: (updated: PageContent) => void;
   onAddPage: (newPage: PageContent) => void;
@@ -77,6 +80,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
+  currentUser,
   pages,
   onUpdatePage,
   onAddPage,
@@ -103,7 +107,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateSiteSettings,
   initialAdminTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>(initialAdminTab || 'site-settings');
+  const [activeTab, setActiveTab] = useState<string>(() =>
+    initialAdminTab && canAccess(currentUser, initialAdminTab as AccessArea)
+      ? initialAdminTab
+      : ACCESS_AREAS.find((area) => canAccess(currentUser, area.id))?.id || 'site-settings');
 
   // Site Header/Footer Settings state
   const [siteForm, setSiteForm] = useState<SiteHeaderFooterSettings>(() => siteSettings || {
@@ -404,10 +411,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, [siteSettings]);
 
   useEffect(() => {
-    if (initialAdminTab) {
+    if (initialAdminTab && canAccess(currentUser, initialAdminTab as AccessArea)) {
       setActiveTab(initialAdminTab);
     }
-  }, [initialAdminTab]);
+  }, [initialAdminTab, currentUser]);
 
   const handleSaveSiteSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -574,7 +581,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   // Block addition state
-  const [newBlockType, setNewBlockType] = useState<'text' | 'image' | 'features' | 'quote' | 'alert'>('text');
+  const [newBlockType, setNewBlockType] = useState<ContentBlock['type']>('text');
   const [newBlockTitle, setNewBlockTitle] = useState('');
   const [newBlockContent, setNewBlockContent] = useState('');
   const [newBlockImageUrl, setNewBlockImageUrl] = useState('');
@@ -584,6 +591,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'teacher' | 'parent' | 'guest'>('teacher');
+  const [newUserAreas, setNewUserAreas] = useState<AccessArea[]>(defaultAreasForRole('teacher'));
   const [newUserSubjects, setNewUserSubjects] = useState('');
   const [newUserAvatar, setNewUserAvatar] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -597,6 +605,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         name: newUserName,
         email: newUserEmail,
         role: newUserRole,
+        allowedAreas: newUserAreas,
         subjects: newUserSubjects ? newUserSubjects.split(',').map((s) => s.trim()) : editingUser.subjects,
         avatar: newUserAvatar || editingUser.avatar,
       };
@@ -609,6 +618,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         name: newUserName,
         email: newUserEmail,
         role: newUserRole,
+        allowedAreas: newUserAreas,
         subjects: newUserSubjects ? newUserSubjects.split(',').map((s) => s.trim()) : undefined,
         avatar: newUserAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
       };
@@ -619,6 +629,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewUserEmail('');
     setNewUserSubjects('');
     setNewUserAvatar('');
+    setNewUserAreas(defaultAreasForRole(newUserRole));
     setTimeout(() => setUserSuccessMsg(''), 3000);
   };
 
@@ -627,6 +638,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewUserName(u.name);
     setNewUserEmail(u.email);
     setNewUserRole(u.role);
+    setNewUserAreas(u.allowedAreas ?? defaultAreasForRole(u.role));
     setNewUserSubjects(u.subjects ? u.subjects.join(', ') : '');
     setNewUserAvatar(u.avatar || '');
   };
@@ -695,7 +707,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editingBlockContent, setEditingBlockContent] = useState('');
   const [editingBlockImageUrl, setEditingBlockImageUrl] = useState('');
   const [editingBlockCaption, setEditingBlockCaption] = useState('');
-  const [editingBlockType, setEditingBlockType] = useState<'text' | 'image' | 'features' | 'quote' | 'alert'>('text');
+  const [editingBlockType, setEditingBlockType] = useState<ContentBlock['type']>('text');
 
   const handleStartEditBlock = (blk: ContentBlock) => {
     setEditingBlockId(blk.id);
@@ -975,7 +987,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="bg-[#0f5238] text-white p-6 rounded-3xl shadow-earth-lg flex flex-col md:flex-row md:items-center justify-between gap-4 font-body border border-emerald-800">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-white p-1 border-2 border-[#e9c46a] shadow-md flex items-center justify-center shrink-0">
-              <img src="/logomarca.jpeg" alt="EFA MEPES Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+              <img src={`${import.meta.env.BASE_URL}logomarca.jpeg`} alt="EFA MEPES Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -1042,86 +1054,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Admin Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('site-settings')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'site-settings'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
-            }`}
-          >
-            <Sliders size={16} /> Personalização do Site (Cabeçalho & Rodapé)
-          </button>
-
-          <button
-            onClick={() => setActiveTab('home-blocks')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
-              activeTab === 'home-blocks'
+          {ACCESS_AREAS.filter((area) => !['teacher-portal', 'parent-portal'].includes(area.id) && canAccess(currentUser, area.id)).map((area) => (
+            <button
+              key={area.id}
+              onClick={() => setActiveTab(area.id)}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer shrink-0 ${activeTab === area.id
                 ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-emerald-50 text-emerald-950 hover:bg-emerald-100 border border-emerald-300'
-            }`}
-          >
-            <Layout size={16} /> Blocos da Página Principal (Home)
-          </button>
-
-          <button
-            onClick={() => setActiveTab('menu')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'menu'
-                ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <MenuIcon size={16} /> Gerenciador do Menu ({menuItems.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab('pages')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'pages'
-                ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Edit3 size={16} /> Editar Páginas & Blocos ({pages.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab('notices')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'notices'
-                ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Bell size={16} /> Postar Comunicados ({notices.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab('routine')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'routine'
-                ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Camera size={16} /> Postar Fotos ({routinePhotos.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
-              activeTab === 'users'
-                ? 'bg-emerald-800 text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Users size={16} /> Usuários & Perfis
-          </button>
+                : 'bg-white text-slate-700 hover:bg-emerald-50 border border-slate-200'}`}
+            >
+              {area.label}
+            </button>
+          ))}
         </div>
 
+        {activeTab === 'professional-builder' && canAccess(currentUser, 'professional-builder') && (
+          <ProfessionalSiteBuilder
+            pages={pages}
+            onUpdatePage={onUpdatePage}
+            onOpenPublicSite={onOpenPublicSite}
+          />
+        )}
+
         {/* TAB 0: PERSONALIZAÇÃO COMPLETA DO SITE (CABEÇALHO & RODAPÉ) */}
-        {activeTab === 'site-settings' && (
+        {activeTab === 'site-settings' && canAccess(currentUser, 'site-settings') && (
           <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
               <div>
@@ -1419,7 +1374,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 0.5: BLOCOS DA PÁGINA PRINCIPAL (HOME) */}
-        {activeTab === 'home-blocks' && (
+        {activeTab === 'home-blocks' && canAccess(currentUser, 'home-blocks') && (
           <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
               <div>
@@ -2280,7 +2235,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 1: GERENCIADOR DO MENU PRINCIPAL E SUBMENUS */}
-        {activeTab === 'menu' && (
+        {activeTab === 'menu' && canAccess(currentUser, 'menu') && (
           <div className="space-y-4">
             <div className="bg-white p-6 rounded-3xl border border-slate-200">
               {renderSectionHeader('menu', '3. GERENCIADOR DO MENU & ESTRUTURA')}
@@ -2773,7 +2728,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 2: EDITAR PÁGINAS & BLOCOS (CMS & GERENCIADOR GERAL) */}
-        {activeTab === 'pages' && (
+        {activeTab === 'pages' && canAccess(currentUser, 'pages') && (
           <div className="bg-white rounded-3xl p-6 shadow-xs border border-slate-200 space-y-6">
             
             {renderSectionHeader('pages', '5. GERENCIADOR DE PÁGINAS DO SITE (CMS)')}
@@ -3794,7 +3749,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 3: COMUNICADOS */}
-        {activeTab === 'notices' && (
+        {activeTab === 'notices' && canAccess(currentUser, 'notices') && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Form criar / editar comunicado */}
@@ -3947,7 +3902,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 4: ROTINA ESCOLAR (FOTOS) */}
-        {activeTab === 'routine' && (
+        {activeTab === 'routine' && canAccess(currentUser, 'routine') && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Form adicionar / editar foto */}
@@ -4094,7 +4049,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {/* TAB 5: USUÁRIOS (GERENCIAMENTO E ACESSO RESTRITO) */}
-        {activeTab === 'users' && (
+        {activeTab === 'users' && canAccess(currentUser, 'users') && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Form Cadastrar / Editar Usuário */}
@@ -4112,6 +4067,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       setNewUserEmail('');
                       setNewUserSubjects('');
                       setNewUserAvatar('');
+                      setNewUserAreas(defaultAreasForRole('teacher'));
                     }}
                     className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
                   >
@@ -4157,7 +4113,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <label className="block text-xs font-bold text-slate-700 mb-1">Perfil de Acesso</label>
                     <select
                       value={newUserRole}
-                      onChange={(e) => setNewUserRole(e.target.value as any)}
+                      onChange={(e) => {
+                        const role = e.target.value as User['role'];
+                        setNewUserRole(role);
+                        setNewUserAreas(defaultAreasForRole(role));
+                      }}
                       className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden font-semibold"
                     >
                       <option value="teacher">Professor(a)</option>
@@ -4188,6 +4148,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden"
                   />
                 </div>
+
+                <fieldset className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50/50">
+                  <legend className="px-1 text-xs font-extrabold text-emerald-950">Áreas permitidas</legend>
+                  <p className="text-[11px] text-slate-600 mb-3">Clique nas áreas que esta pessoa poderá acessar.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {ACCESS_AREAS.map((area) => (
+                      <label key={area.id} className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newUserAreas.includes(area.id)}
+                          onChange={(event) => setNewUserAreas((areas) => event.target.checked
+                            ? [...areas, area.id]
+                            : areas.filter((id) => id !== area.id))}
+                          className="accent-emerald-700"
+                        />
+                        {area.label}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
 
                 <button
                   type="submit"
@@ -4224,6 +4204,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-500 font-body">{u.email}</div>
+                        <div className="text-[10px] text-emerald-800 font-semibold">
+                          {(u.allowedAreas ?? defaultAreasForRole(u.role)).length} área(s) permitida(s)
+                        </div>
                         {u.subjects && u.subjects.length > 0 && (
                           <div className="text-[10px] text-emerald-800 font-medium">
                             {u.subjects.join(' • ')}

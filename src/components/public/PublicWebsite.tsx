@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PageContent, Notice, RoutinePhoto, User, SiteHeaderFooterSettings } from '../../types';
 import { RichTextRenderer } from '../common/RichTextRenderer';
+import { ProfessionalBlockRenderer } from '../cms/ProfessionalBlockRenderer';
 import { 
   GraduationCap, 
   Sprout, 
@@ -382,7 +383,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     <div className="min-h-screen bg-slate-50 text-slate-800">
       
       {/* Dynamic Hero Section */}
-      <section className="relative bg-[#0f5238] text-white overflow-hidden font-body">
+      {currentPage.showHero !== false && <section className="relative bg-[#0f5238] text-white overflow-hidden font-body">
         {/* Background Image with Dark Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <img
@@ -398,7 +399,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             
             <div className="lg:col-span-8 space-y-3.5">
               <div className="inline-flex items-center gap-2 bg-[#e9c46a] text-[#4a2810] px-3.5 py-1 rounded-full font-extrabold text-[11px] tracking-wide shadow-xs font-heading">
-                <img src="/logomarca.jpeg" alt="EFA Logo" className="w-4 h-4 object-contain rounded-full bg-white p-0.5" referrerPolicy="no-referrer" />
+                <img src={`${import.meta.env.BASE_URL}logomarca.jpeg`} alt="EFA Logo" className="w-4 h-4 object-contain rounded-full bg-white p-0.5" referrerPolicy="no-referrer" />
                 <span>EFABE - Escola Família Agrícola de Boa Esperança</span>
               </div>
 
@@ -417,7 +418,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="lg:col-span-4 bg-[#1b4332]/90 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-[#2d6a4f] text-white space-y-3 shadow-earth-lg">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-white p-1 border-2 border-[#e9c46a] shadow-xs flex items-center justify-center shrink-0">
-                  <img src="/logomarca.jpeg" alt="Logo Emblem" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                  <img src={`${import.meta.env.BASE_URL}logomarca.jpeg`} alt="Logo Emblem" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-[#e9c46a] font-heading">Pedagogia da Alternância</h3>
@@ -447,7 +448,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
 
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Institutional Quote Banner (DESIGN.md) */}
       {!isSectionHidden('quoteBanner') && (
@@ -455,7 +456,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-[#fcf9f2] border-l-4 border-[#6b4226] shadow-xs">
               <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white p-1 border border-[#e9c46a] shadow-xs flex items-center justify-center">
-                <img src="/logomarca.jpeg" alt="Logo EFABE" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                <img src={`${import.meta.env.BASE_URL}logomarca.jpeg`} alt="Logo EFABE" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
               </div>
               <div className="space-y-1 text-center sm:text-left">
                 <span className="text-[10px] font-extrabold text-[#6b4226] uppercase tracking-wider font-heading">
@@ -628,14 +629,17 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
               <div className="space-y-4 pt-1">
                 {currentPage.blocks.filter((blk) => !blk.hidden).map((blk) => (
                   <div key={blk.id}>
-                    {blk.type === 'text' && (
+                    {(Boolean(blk.style) || ['video', 'document', 'spacer', 'columns', 'button'].includes(blk.type)) && (
+                      <ProfessionalBlockRenderer block={blk} />
+                    )}
+                    {blk.type === 'text' && !blk.style && (
                       <div className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-1.5">
                         {blk.title && <h3 className="font-extrabold text-base text-slate-900">{blk.title}</h3>}
                         <RichTextRenderer content={blk.content} />
                       </div>
                     )}
 
-                    {blk.type === 'image' && (
+                    {blk.type === 'image' && !blk.style && (
                       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-xs">
                         {blk.imageUrl && (
                           <img src={blk.imageUrl} alt={blk.title || 'Imagem do conteúdo'} className="w-full max-h-[400px] object-cover" />
@@ -649,7 +653,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                       </div>
                     )}
 
-                    {blk.type === 'features' && (
+                    {blk.type === 'features' && !blk.style && (
                       <div className="p-4 sm:p-5 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1.5">
                         <h3 className="font-extrabold text-base text-emerald-950 flex items-center gap-2">
                           <Award size={18} className="text-emerald-700" />
@@ -659,7 +663,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                       </div>
                     )}
 
-                    {blk.type === 'quote' && (
+                    {blk.type === 'quote' && !blk.style && (
                       <div className="p-5 bg-emerald-950 text-white rounded-2xl space-y-2 relative overflow-hidden shadow-xs">
                         <Quote size={28} className="text-amber-400 opacity-30 absolute top-3 right-3" />
                         <p className="text-sm sm:text-base italic font-light text-emerald-100 relative z-10">"{blk.content}"</p>
@@ -671,7 +675,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
                       </div>
                     )}
 
-                    {blk.type === 'alert' && (
+                    {blk.type === 'alert' && !blk.style && (
                       <div className="p-4 sm:p-5 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-1.5">
                         <h3 className="font-extrabold text-amber-950 text-sm sm:text-base flex items-center gap-2">
                           <AlertTriangle size={18} className="text-amber-600" />

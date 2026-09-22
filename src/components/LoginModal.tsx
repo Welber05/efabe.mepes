@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { User, Role } from '../types';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { firebaseAuth, isFirebaseConfigured } from '../lib/firebase';
+import { getCmsUserProfile } from '../cms/firebaseRepository';
 import { 
   X, 
   Lock, 
@@ -8,7 +11,6 @@ import {
   BookOpen, 
   Users, 
   KeyRound, 
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 
@@ -27,8 +29,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const [selectedRole, setSelectedRole] = useState<Role>('admin');
   const [email, setEmail] = useState('admin@mepes.org.br');
-  const [password, setPassword] = useState('123');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -44,25 +47,35 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setIsSubmitting(true);
 
     const found = usersList.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() || u.cpf === email
     );
 
-    if (found) {
-      onLoginSuccess(found);
-      onClose();
-    } else {
-      setErrorMsg('Credenciais não encontradas. Utilize um dos botões de simulação abaixo.');
+    try {
+      if (isFirebaseConfigured && firebaseAuth) {
+        const credential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        const cloudProfile = await getCmsUserProfile(credential.user.uid);
+        onLoginSuccess(cloudProfile);
+        onClose();
+        return;
+      }
+      if (found && password === '@efabe2026') {
+        onLoginSuccess(found);
+        onClose();
+        setPassword('');
+      } else {
+        setErrorMsg('E-mail/CPF ou senha incorretos.');
+      }
+    } catch {
+      setErrorMsg('Não foi possível entrar. Verifique o e-mail, a senha e a autorização deste usuário.');
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleQuickDemo = (user: User) => {
-    onLoginSuccess(user);
-    onClose();
   };
 
   return (
@@ -80,7 +93,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white border border-[#e9c46a] p-0.5 shadow-md flex items-center justify-center shrink-0">
-              <img src="/logomarca.jpeg" alt="EFABE Logo" className="w-full h-full object-contain" />
+              <img src={`${import.meta.env.BASE_URL}logomarca.jpeg`} alt="EFABE Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h2 className="text-xl font-bold tracking-tight font-heading">Portal EFABE - Acesso Restrito</h2>
@@ -140,7 +153,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                E-mail ou CPF Cadastrado
+                {isFirebaseConfigured ? 'E-mail cadastrado' : 'E-mail ou CPF cadastrado'}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 text-slate-400" size={16} />
@@ -149,7 +162,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-hidden"
-                  placeholder="ex: admin@mepes.org.br ou CPF"
+                  placeholder={isFirebaseConfigured ? 'seu@email.com' : 'ex: admin@mepes.org.br ou CPF'}
                   required
                 />
               </div>
@@ -174,41 +187,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <KeyRound size={16} />
-              <span>Entrar no Portal</span>
+              <span>{isSubmitting ? 'Verificando acesso...' : 'Entrar no Portal'}</span>
             </button>
           </form>
-
-          {/* Demonstration Quick Access Buttons */}
-          <div className="pt-4 border-t border-slate-200">
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">
-              Acesso Instantâneo de Teste (Clique para Entrar)
-            </p>
-            <div className="space-y-2">
-              {usersList.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleQuickDemo(u)}
-                  className="w-full text-left p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all flex items-center justify-between group cursor-pointer"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full object-cover border border-slate-300" />
-                    <div>
-                      <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-900">{u.name}</div>
-                      <div className="text-[10px] text-slate-500">
-                        {u.role === 'admin' ? 'Administração do Site' : u.role === 'teacher' ? 'Prof. Agropecuária' : 'Pais de Lucas Silva'}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                    Acessar <CheckCircle2 size={14} />
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
         </div>
 

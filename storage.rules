@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return firestore.get(/databases/(default)/documents/cmsUsers/$(request.auth.uid));
+    }
+
+    function isEditor() {
+      return signedIn()
+        && userProfile().data.active == true
+        && userProfile().data.role in ['admin', 'editor'];
+    }
+
+    match /cms-media/{allPaths=**} {
+      allow read: if true;
+      allow write: if isEditor()
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches(
+          'image/.*|video/.*|application/pdf|text/.*|application/msword|application/vnd.*'
+        );
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
