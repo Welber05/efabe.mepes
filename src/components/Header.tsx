@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, MenuItem, SiteHeaderFooterSettings } from '../types';
 import { canAccess, canAccessAdmin } from '../auth/access';
+import { publicAssetUrl } from '../lib/publicAsset';
 import { 
   GraduationCap, 
   UserCheck, 
@@ -150,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-white shadow-md border-2 border-[#e9c46a] group-hover:scale-105 transition-transform flex items-center justify-center p-0.5">
               <img 
-                src={settings.logoUrl || '/logomarca.jpeg'} 
+                src={publicAssetUrl(settings.logoUrl)} 
                 alt={settings.schoolName} 
                 className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"

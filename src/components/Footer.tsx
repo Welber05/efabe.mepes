@@ -1,6 +1,7 @@
 import React from 'react';
 import { GraduationCap, MapPin, Phone, Mail, Globe, Heart, Edit3 } from 'lucide-react';
 import { SiteHeaderFooterSettings, User } from '../types';
+import { publicAssetUrl } from '../lib/publicAsset';
 
 interface FooterProps {
   siteSettings?: SiteHeaderFooterSettings;
@@ -48,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-white p-0.5 border border-[#e9c46a] shadow-md flex items-center justify-center shrink-0">
                 <img
-                  src={settings.logoUrl || '/logomarca.jpeg'}
+                  src={publicAssetUrl(settings.logoUrl)}
                   alt={settings.schoolName}
                   className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"

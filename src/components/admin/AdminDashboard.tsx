@@ -3,6 +3,7 @@ import { PageContent, Notice, RoutinePhoto, User, MenuItem, ContentBlock, SiteHe
 import { RichTextEditor } from './RichTextEditor';
 import { ProfessionalSiteBuilder } from './ProfessionalSiteBuilder';
 import { ACCESS_AREAS, AccessArea, canAccess, defaultAreasForRole } from '../../auth/access';
+import { publicAssetUrl } from '../../lib/publicAsset';
 import { 
   ShieldCheck, 
   Edit3, 
@@ -1127,7 +1128,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       />
                       {siteForm.logoUrl && (
                         <div className="w-10 h-10 rounded-xl border border-slate-200 p-1 bg-white shrink-0 flex items-center justify-center overflow-hidden">
-                          <img src={siteForm.logoUrl} alt="Preview Logo" className="w-full h-full object-contain" />
+                          <img src={publicAssetUrl(siteForm.logoUrl)} alt="Preview Logo" className="w-full h-full object-contain" />
                         </div>
                       )}
                     </div>
