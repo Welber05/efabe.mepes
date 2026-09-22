@@ -4,6 +4,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { ProfessionalSiteBuilder } from './ProfessionalSiteBuilder';
 import { ACCESS_AREAS, AccessArea, canAccess, defaultAreasForRole } from '../../auth/access';
 import { publicAssetUrl } from '../../lib/publicAsset';
+import { MAX_MENU_LEVEL, menuChildren, menuDepth, menuDescendantIds, menuSubtreeDepth } from '../../menu/hierarchy';
 import { 
   ShieldCheck, 
   Edit3, 
@@ -783,11 +784,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     if (!newMenuLabel) return;
 
+    if (selectedParentId) {
+      const parentLevel = menuDepth(menuItems, selectedParentId);
+      if (!parentLevel || parentLevel >= MAX_MENU_LEVEL) { alert('Escolha um menu-pai até a 4ª via. A 5ª via é o último nível.'); return; }
+      if (editingMenuItem) {
+        if (selectedParentId === editingMenuItem.id || menuDescendantIds(menuItems, editingMenuItem.id).has(selectedParentId)) { alert('Um item não pode ficar dentro de si mesmo ou de seus submenus.'); return; }
+        if (parentLevel + menuSubtreeDepth(menuItems, editingMenuItem.id) > MAX_MENU_LEVEL) { alert('Esta alteração ultrapassaria o limite de 5 vias.'); return; }
+      }
+    }
+
     const slug = newMenuSlug.trim()
       ? newMenuSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-')
       : newMenuLabel.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
 
     if (editingMenuItem) {
+      if (menuItems.some((item) => item.id !== editingMenuItem.id && item.slug === slug)) { alert('Este identificador já está em uso.'); return; }
       const updated: MenuItem = {
         ...editingMenuItem,
         label: newMenuLabel,
@@ -854,7 +865,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setSelectedParentId('');
   };
 
-  // Menu reordering (works for level 1, submenus level 2, and 3ª via level 3)
+  // Reordering works within any sibling group, through the 5th level.
   const handleMoveMenuItem = (group: MenuItem[], index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= group.length) return;
@@ -979,6 +990,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewPhotoDesc('');
     setNewPhotoUrl('');
   };
+
+  const parentOptions = (parentId = '', level = 1): React.ReactNode[] => menuChildren(menuItems, parentId).flatMap((item) => [
+    level < MAX_MENU_LEVEL && <option key={item.id} value={item.id} disabled={editingMenuItem ? item.id === editingMenuItem.id || menuDescendantIds(menuItems, editingMenuItem.id).has(item.id) || level + menuSubtreeDepth(menuItems, editingMenuItem.id) > MAX_MENU_LEVEL : false}>
+      {'　'.repeat(level - 1)}↳ {level + 1}ª via sob: {item.label}
+    </option>,
+    ...parentOptions(item.id, level + 1),
+  ]);
 
   return (
     <div className="py-8 bg-slate-100 min-h-screen">
@@ -2282,27 +2300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium bg-slate-50"
                   >
                     <option value="">📌 Menu Principal (Item de 1º Nível)</option>
-                    {menuItems
-                      .filter((m) => !m.parentId)
-                      .sort((a, b) => a.order - b.order)
-                      .map((p) => {
-                        const level2Items = menuItems
-                          .filter((s) => s.parentId === p.id)
-                          .sort((a, b) => a.order - b.order);
-
-                        return (
-                          <React.Fragment key={p.id}>
-                            <option value={p.id}>
-                              ↳ Submenu de 2º Nível sob: {p.label}
-                            </option>
-                            {level2Items.map((s2) => (
-                              <option key={s2.id} value={s2.id}>
-                                &nbsp;&nbsp;&nbsp;&nbsp;↳ 3ª Via / Sub-submenu sob: {s2.label}
-                              </option>
-                            ))}
-                          </React.Fragment>
-                        );
-                      })}
+                    {parentOptions()}
                   </select>
                   <span className="text-[10px] text-slate-400 mt-1 block">
                     {selectedParentId
@@ -2624,9 +2622,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   {/* Level 3 items (3ª Via) */}
                                   {subSubItems.length > 0 && (
                                     <div className="pl-6 space-y-1 border-l-2 border-amber-300 ml-4 py-0.5">
-                                      {subSubItems.map((ssItem, ssIdx) => (
+                                      {subSubItems.map((ssItem, ssIdx) => (<React.Fragment key={ssItem.id}>
                                         <div
-                                          key={ssItem.id}
                                           className={`p-2 rounded-lg border flex items-center justify-between gap-2 transition-colors ${
                                             ssItem.visible ? 'bg-amber-50/40 border-amber-200/60' : 'bg-slate-100/70 border-slate-200 opacity-60'
                                           }`}
@@ -2676,6 +2673,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </button>
 
                                             <button
+                                              onClick={() => { setSelectedParentId(ssItem.id); setNewMenuLabel(''); setNewMenuSlug(''); setEditingMenuItem(null); }}
+                                              className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                              title="Adicionar item da 4ª via"
+                                            ><Plus size={11} /> 4ª Via</button>
+                                            <button
                                               onClick={() => handleStartEditMenuItem(ssItem)}
                                               className="p-1 text-slate-600 hover:text-amber-800 hover:bg-amber-100/50 rounded-md"
                                               title="Editar item da 3ª via"
@@ -2709,7 +2711,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </button>
                                           </div>
                                         </div>
-                                      ))}
+                                        <DeepMenuManager items={menuItems} parentId={ssItem.id} level={4} activePage={handleGoToEditPageFromMenu} beginChild={(id) => { setSelectedParentId(id); setNewMenuLabel(''); setNewMenuSlug(''); setEditingMenuItem(null); }} beginEdit={handleStartEditMenuItem} move={handleMoveMenuItem} update={onUpdateMenuItem} remove={(item) => { if (confirm(`Deseja remover "${item.label}" e seus submenus?`)) { onDeleteMenuItem(item.id); onDeletePage(item.slug); } }} />
+                                      </React.Fragment>))}
                                     </div>
                                   )}
 
@@ -4247,4 +4250,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
     </div>
   );
+};
+
+interface DeepMenuManagerProps {
+  items: MenuItem[];
+  parentId: string;
+  level: 4 | 5;
+  activePage: (slug: string, label: string) => void;
+  beginChild: (id: string) => void;
+  beginEdit: (item: MenuItem) => void;
+  move: (siblings: MenuItem[], index: number, direction: 'up' | 'down') => void;
+  update: (item: MenuItem) => void;
+  remove: (item: MenuItem) => void;
+}
+
+const DeepMenuManager: React.FC<DeepMenuManagerProps> = ({ items, parentId, level, activePage, beginChild, beginEdit, move, update, remove }) => {
+  const children = menuChildren(items, parentId);
+  if (!children.length) return null;
+  return <div className="ml-4 pl-4 border-l-2 border-emerald-200 space-y-1.5 py-1">
+    {children.map((item, index) => <div key={item.id}>
+      <div className={`rounded-lg border p-2 flex flex-wrap items-center justify-between gap-2 text-xs ${item.visible ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-100 border-slate-200 opacity-60'}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex flex-col"><button disabled={index === 0} onClick={() => move(children, index, 'up')} title="Mover para cima" className="disabled:opacity-30"><ArrowUp size={11}/></button><button disabled={index === children.length - 1} onClick={() => move(children, index, 'down')} title="Mover para baixo" className="disabled:opacity-30"><ArrowDown size={11}/></button></div>
+          <span className="font-bold truncate">{item.label}</span><span className="text-[9px] bg-emerald-200 text-emerald-900 rounded px-1">{level}ª Via</span>
+        </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          <button onClick={() => activePage(item.slug, item.label)} className="cms-secondary-button text-[10px]" title="Personalizar página"><FileText size={11}/> Página</button>
+          {level < MAX_MENU_LEVEL && <button onClick={() => beginChild(item.id)} className="cms-secondary-button text-[10px]" title="Adicionar item da 5ª via"><Plus size={11}/> 5ª Via</button>}
+          <button onClick={() => beginEdit(item)} title="Editar item" className="p-1"><Edit3 size={12}/></button>
+          <button onClick={() => update({ ...item, visible: !item.visible })} title={item.visible ? 'Ocultar' : 'Mostrar'} className="p-1">{item.visible ? <Eye size={12}/> : <EyeOff size={12}/>}</button>
+          <button onClick={() => remove(item)} title="Excluir item e submenus" className="p-1 text-red-600"><Trash2 size={12}/></button>
+        </div>
+      </div>
+      {level === 4 && <DeepMenuManager items={items} parentId={item.id} level={5} activePage={activePage} beginChild={beginChild} beginEdit={beginEdit} move={move} update={update} remove={remove} />}
+    </div>)}
+  </div>;
 };

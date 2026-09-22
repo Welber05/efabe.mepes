@@ -33,6 +33,7 @@ import { isFirebaseConfigured } from './lib/firebase';
 import { firebaseAuth } from './lib/firebase';
 import { signOut } from 'firebase/auth';
 import { AccessArea, canAccess, canAccessAdmin } from './auth/access';
+import { menuDescendantIds } from './menu/hierarchy';
 
 export default function App() {
   // Current user state with local persistence
@@ -353,22 +354,14 @@ export default function App() {
   };
 
   const handleDeleteMenuItem = (id: string) => {
+    const idsToDelete = menuDescendantIds(menuItems, id);
+    idsToDelete.add(id);
+    const slugsToDelete = new Set(menuItems.filter((item) => idsToDelete.has(item.id)).map((item) => item.slug));
     setMenuItems((prev) => {
-      const idsToDelete = new Set<string>([id]);
-      // First pass: direct submenus
-      prev.forEach((item) => {
-        if (item.parentId && idsToDelete.has(item.parentId)) {
-          idsToDelete.add(item.id);
-        }
-      });
-      // Second pass: sub-submenus (3rd level)
-      prev.forEach((item) => {
-        if (item.parentId && idsToDelete.has(item.parentId)) {
-          idsToDelete.add(item.id);
-        }
-      });
       return prev.filter((m) => !idsToDelete.has(m.id));
     });
+    setPages((prev) => prev.filter((page) => !slugsToDelete.has(page.slug)));
+    if (isFirebaseConfigured) pages.filter((page) => slugsToDelete.has(page.slug)).forEach((page) => { void deleteCmsPage(page.id); });
   };
 
   const handleReorderMenuItems = (reorderedSubset: MenuItem[]) => {

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { User, MenuItem, SiteHeaderFooterSettings } from '../types';
 import { canAccess, canAccessAdmin } from '../auth/access';
 import { publicAssetUrl } from '../lib/publicAsset';
+import { MenuBranch } from './menu/MenuBranch';
+import { menuDescendantIds } from '../menu/hierarchy';
 import { 
   GraduationCap, 
   UserCheck, 
@@ -220,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
                   const itemId = cmsItem ? cmsItem.id : target.slug;
                   const subItems = cmsItem ? getSubMenuItems(cmsItem.id) : [];
                   const hasSub = subItems.length > 0;
-                  const isSubActive = subItems.some((s) => s.slug === activeTab);
+                  const isSubActive = cmsItem ? [...menuDescendantIds(menuItems, cmsItem.id)].some((id) => menuItems.find((item) => item.id === id)?.slug === activeTab) : false;
 
                   if (hasSub) {
                     return (
@@ -243,20 +245,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <div className="px-3.5 py-1 text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider border-b border-slate-100 mb-1 font-heading">
                             {label}
                           </div>
-                          {subItems.map((sub) => (
-                            <button
-                              key={sub.id}
-                              onClick={() => setActiveTab(sub.slug)}
-                              className={`w-full text-left px-3.5 py-2 text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
-                                activeTab === sub.slug
-                                  ? 'bg-emerald-100/70 text-emerald-900 font-extrabold border-l-4 border-emerald-700 pl-2.5'
-                                  : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/80'
-                              }`}
-                            >
-                              {getMenuIcon(sub.slug)}
-                              <span>{sub.label}</span>
-                            </button>
-                          ))}
+                          <MenuBranch items={menuItems} parentId={itemId} variant="dropdown" activeSlug={activeTab} onNavigate={setActiveTab} icon={getMenuIcon} />
                         </div>
                       </div>
                     );
@@ -348,49 +337,7 @@ export const Header: React.FC<HeaderProps> = ({
                             )}
                           </button>
 
-                          {/* Level 2 Submenus */}
-                          {hasSub && (
-                            <div className="mt-2 space-y-1 pl-2 border-l-2 border-emerald-200">
-                              {subItems.map((sub) => {
-                                const subSubItems = menuItems.filter((m) => m.parentId === sub.id && m.visible);
-                                return (
-                                  <div key={sub.id}>
-                                    <button
-                                      onClick={() => {
-                                        setActiveTab(sub.slug);
-                                        setMegaMenuOpen(false);
-                                      }}
-                                      className={`w-full text-left text-[11px] font-semibold py-1 px-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
-                                        activeTab === sub.slug ? 'bg-emerald-100 text-emerald-900 font-extrabold' : 'text-slate-700 hover:text-[#0f5238] hover:bg-emerald-50'
-                                      }`}
-                                    >
-                                      <span className="truncate">• {sub.label}</span>
-                                    </button>
-
-                                    {/* Level 3 Sub-submenus (3ª via) */}
-                                    {subSubItems.length > 0 && (
-                                      <div className="pl-3 space-y-0.5 border-l border-amber-300 my-0.5">
-                                        {subSubItems.map((subSub) => (
-                                          <button
-                                            key={subSub.id}
-                                            onClick={() => {
-                                              setActiveTab(subSub.slug);
-                                              setMegaMenuOpen(false);
-                                            }}
-                                            className={`w-full text-left text-[10px] py-0.5 px-1 rounded-md transition-colors block cursor-pointer ${
-                                              activeTab === subSub.slug ? 'text-amber-900 font-extrabold bg-amber-100' : 'text-slate-500 hover:text-slate-900'
-                                            }`}
-                                          >
-                                            ↳ {subSub.label}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                          {hasSub && <div className="mt-2"><MenuBranch items={menuItems} parentId={item.id} variant="mega" activeSlug={activeTab} onNavigate={(slug) => { setActiveTab(slug); setMegaMenuOpen(false); }} /></div>}
                         </div>
                       </div>
                     );
@@ -552,22 +499,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {hasSub && <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">{subItems.length} sub</span>}
                 </button>
 
-                {hasSub && (
-                  <div className="pl-6 space-y-1 border-l-2 border-emerald-200 ml-3">
-                    {subItems.map((sub) => (
-                      <button
-                        key={sub.id}
-                        onClick={() => { setActiveTab(sub.slug); setMobileMenuOpen(false); }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 cursor-pointer ${
-                          activeTab === sub.slug ? 'bg-emerald-100 text-emerald-900 font-extrabold' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {getMenuIcon(sub.slug)}
-                        <span>{sub.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {hasSub && <div className="pl-3"><MenuBranch items={menuItems} parentId={item.id} variant="mobile" activeSlug={activeTab} onNavigate={(slug) => { setActiveTab(slug); setMobileMenuOpen(false); }} icon={getMenuIcon} /></div>}
               </div>
             );
           })}
