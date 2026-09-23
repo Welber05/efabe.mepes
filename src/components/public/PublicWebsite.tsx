@@ -395,7 +395,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f5238] via-[#0f5238]/95 to-[#1b4332]/90" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             
             <div className="lg:col-span-8 space-y-3.5">
