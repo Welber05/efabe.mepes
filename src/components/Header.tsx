@@ -319,7 +319,6 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Only the first level appears initially; each hovered item reveals one next level. */}
                 <div className="relative">
                   {menuColumns.map((column, depth) => <div key={depth} style={depth ? { right: `calc(100% + ${(depth - 1) * 170}px)` } : undefined} className={`${depth ? 'absolute top-0 w-[170px] shadow-xl' : 'w-full'} max-h-[420px] bg-slate-50/95 rounded-2xl border border-slate-200/80 p-2 overflow-y-auto`}>
-                    <p className="px-2 py-1 mb-1 text-[10px] font-extrabold text-emerald-800 uppercase">{depth + 1}ª via</p>
                     {column.map((item) => {
                       const children = depth < 4 ? getSubMenuItems(item.id) : [];
                       const selected = hoveredMenuPath[depth] === item.id;
