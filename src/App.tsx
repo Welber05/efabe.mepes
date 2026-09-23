@@ -34,6 +34,7 @@ import { firebaseAuth } from './lib/firebase';
 import { signOut } from 'firebase/auth';
 import { AccessArea, canAccess, canAccessAdmin } from './auth/access';
 import { menuDescendantIds } from './menu/hierarchy';
+import { migrateEfabeContact } from './site/efabeContact';
 
 export default function App() {
   // Current user state with local persistence
@@ -51,7 +52,9 @@ export default function App() {
   // Site Header & Footer Settings
   const [siteSettings, setSiteSettings] = useState<SiteHeaderFooterSettings>(() => {
     const saved = localStorage.getItem('mepes_site_settings');
-    return saved ? JSON.parse(saved) : INITIAL_SITE_SETTINGS;
+    if (!saved) return INITIAL_SITE_SETTINGS;
+    try { return migrateEfabeContact(JSON.parse(saved) as SiteHeaderFooterSettings); }
+    catch { return INITIAL_SITE_SETTINGS; }
   });
 
   // Dynamic Content States with localStorage persistence & automatic code sync

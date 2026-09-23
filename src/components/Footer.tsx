@@ -2,6 +2,7 @@ import React from 'react';
 import { GraduationCap, MapPin, Phone, Mail, Globe, Heart, Edit3 } from 'lucide-react';
 import { SiteHeaderFooterSettings, User } from '../types';
 import { publicAssetUrl } from '../lib/publicAsset';
+import { EFABE_ADDRESS, EFABE_EMAIL, EFABE_PHONE } from '../site/efabeContact';
 
 interface FooterProps {
   siteSettings?: SiteHeaderFooterSettings;
@@ -24,10 +25,10 @@ export const Footer: React.FC<FooterProps> = ({
     logoUrl: '/logomarca.jpeg',
     footerAboutText: 'Escola Família Agrícola de Boa Esperança. Referência na formação de jovens do campo com a consolidação e vivência prática da Pedagogia da Alternância.',
     footerSlogan: '🌻 "cuidando das pessoas e do mundo"',
-    footerAddress: 'Anchieta & Unidades Regionais, Espírito Santo - ES',
-    footerPhone: '(28) 3536-1200 / (27) 99881-2200',
-    footerEmail: 'contato@mepes.org.br',
-    footerWebsite: 'www.mepes.org.br',
+    footerAddress: EFABE_ADDRESS,
+    footerPhone: EFABE_PHONE,
+    footerEmail: EFABE_EMAIL,
+    footerWebsite: '',
     footerCopyright: 'EFABE - Escola Família Agrícola de Boa Esperança. Todos os direitos reservados.',
     footerUnitsText: 'A EFABE conta com a parceria da entidade mantenedora MEPES e integra a rede de Escolas Família Agrícola no Espírito Santo.',
     footerCoursesList: [

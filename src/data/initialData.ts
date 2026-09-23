@@ -1,4 +1,5 @@
 import { Notice, RoutinePhoto, PageContent, User, StudentGrade, Occurrence, AlternanciaSchedule, Message, MenuItem, SiteHeaderFooterSettings, DocumentItem, PhotoItem, PhotoCatalogCategories, GoogleDriveFolderConfig } from '../types';
+import { EFABE_ADDRESS, EFABE_EMAIL, EFABE_PHONE } from '../site/efabeContact';
 
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
   { id: 'm-1', label: 'Início', slug: 'home', order: 1, visible: true },
@@ -528,10 +529,10 @@ export const INITIAL_SITE_SETTINGS: SiteHeaderFooterSettings = {
   // Rodapé
   footerAboutText: 'Escola Família Agrícola de Boa Esperança. Referência na formação de jovens do campo com a consolidação e vivência prática da Pedagogia da Alternância.',
   footerSlogan: '🌻 "cuidando das pessoas e do mundo"',
-  footerAddress: 'Anchieta & Unidades Regionais, Espírito Santo - ES',
-  footerPhone: '(28) 3536-1200 / (27) 99881-2200',
-  footerEmail: 'contato@mepes.org.br',
-  footerWebsite: 'www.mepes.org.br',
+  footerAddress: EFABE_ADDRESS,
+  footerPhone: EFABE_PHONE,
+  footerEmail: EFABE_EMAIL,
+  footerWebsite: '',
   footerCopyright: 'EFABE - Escola Família Agrícola de Boa Esperança. Todos os direitos reservados.',
   footerUnitsText: 'A EFABE conta com a parceria da entidade mantenedora MEPES e integra a rede de Escolas Família Agrícola no Espírito Santo.',
   footerCoursesList: [
@@ -555,7 +556,7 @@ export const INITIAL_SITE_SETTINGS: SiteHeaderFooterSettings = {
   },
 
   // Blocos Editáveis da Página Principal (Home)
-  homePillarsBadge: 'PILARES DO MEPES',
+  homePillarsBadge: 'PILARES DA EFABE',
   homePillarsTitle: 'Educação do Campo que Transforma Vidas e Propriedades',
   homePillarsSubtitle: 'Mais do que uma escola, um movimento focado na formação humana integral e no desenvolvimento sustentável do meio rural capixaba.',
   homePillarsList: [
@@ -583,9 +584,9 @@ export const INITIAL_SITE_SETTINGS: SiteHeaderFooterSettings = {
   homeContactBadge: 'FALE CONOSCO',
   homeContactTitle: 'Processo Seletivo & Pré-Matrícula EFABE',
   homeContactDesc: 'Quer saber mais sobre como ingressar em nossas turmas da Pedagogia da Alternância? Preencha o formulário e nossa equipe pedagógica entrará em contato.',
-  homeContactPhone: 'Atendimento: (28) 3536-1200 / (27) 99881-2200',
-  homeContactEmail: 'secretaria@mepes.org.br',
-  homeContactAddress: 'Anchieta e Unidades EFAs no ES',
+  homeContactPhone: `Atendimento: ${EFABE_PHONE}`,
+  homeContactEmail: EFABE_EMAIL,
+  homeContactAddress: EFABE_ADDRESS,
   homeContactFormTitle: 'Ficha de Contato & Pré-Inscrição',
   homeContactButtonText: 'Enviar Pré-Inscrição',
 

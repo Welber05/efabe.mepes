@@ -4,6 +4,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { ProfessionalSiteBuilder } from './ProfessionalSiteBuilder';
 import { ACCESS_AREAS, AccessArea, canAccess, defaultAreasForRole } from '../../auth/access';
 import { publicAssetUrl } from '../../lib/publicAsset';
+import { EFABE_ADDRESS, EFABE_EMAIL, EFABE_PHONE } from '../../site/efabeContact';
 import { MAX_MENU_LEVEL, menuChildren, menuDepth, menuDescendantIds, menuSubtreeDepth } from '../../menu/hierarchy';
 import { 
   ShieldCheck, 
@@ -125,12 +126,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     logoUrl: '/logomarca.jpeg',
     footerAboutText: 'Escola Família Agrícola de Boa Esperança. Referência na formação de jovens do campo com a consolidação e vivência prática da Pedagogia da Alternância.',
     footerSlogan: '🌻 "cuidando das pessoas e do mundo"',
-    footerAddress: 'Anchieta & Unidades Regionais, Espírito Santo - ES',
-    footerPhone: '(28) 3536-1200 / (27) 99881-2200',
-    footerEmail: 'contato@mepes.org.br',
-    footerWebsite: 'www.mepes.org.br',
+    footerAddress: EFABE_ADDRESS,
+    footerPhone: EFABE_PHONE,
+    footerEmail: EFABE_EMAIL,
+    footerWebsite: '',
     footerCopyright: 'EFABE - Escola Família Agrícola de Boa Esperança. Todos os direitos reservados.',
-    footerUnitsText: 'O MEPES coordena e apoia diversas unidades de Escolas Família Agrícola em todo o estado do Espírito Santo, incluindo Anchieta, Olivânia, Castelo, Colatina, São Gabriel da Palha e Jaguaré.',
+    footerUnitsText: 'A EFABE conta com a parceria da entidade mantenedora MEPES e integra a rede de Escolas Família Agrícola no Espírito Santo.',
     footerCoursesList: [
       'Técnico em Agropecuária Sustentável',
       'Técnico em Meio Ambiente e Recuperação',
@@ -278,7 +279,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   // State for Home Page Blocks
-  const [homePillarsBadge, setHomePillarsBadge] = useState(siteSettings?.homePillarsBadge || 'PILARES DO MEPES');
+  const [homePillarsBadge, setHomePillarsBadge] = useState(siteSettings?.homePillarsBadge || 'PILARES DA EFABE');
   const [homePillarsTitle, setHomePillarsTitle] = useState(siteSettings?.homePillarsTitle || 'Educação do Campo que Transforma Vidas e Propriedades');
   const [homePillarsSubtitle, setHomePillarsSubtitle] = useState(siteSettings?.homePillarsSubtitle || 'Mais do que uma escola, um movimento focado na formação humana integral e no desenvolvimento sustentável do meio rural capixaba.');
   const [homePillarsList, setHomePillarsList] = useState(siteSettings?.homePillarsList || [
@@ -315,9 +316,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [homeContactBadge, setHomeContactBadge] = useState(siteSettings?.homeContactBadge || 'FALE CONOSCO');
   const [homeContactTitle, setHomeContactTitle] = useState(siteSettings?.homeContactTitle || 'Processo Seletivo & Pré-Matrícula EFABE');
   const [homeContactDesc, setHomeContactDesc] = useState(siteSettings?.homeContactDesc || 'Quer saber mais sobre como ingressar em nossas turmas da Pedagogia da Alternância? Preencha o formulário e nossa equipe pedagógica entrará em contato.');
-  const [homeContactPhone, setHomeContactPhone] = useState(siteSettings?.homeContactPhone || 'Atendimento: (28) 3536-1200 / (27) 99881-2200');
-  const [homeContactEmail, setHomeContactEmail] = useState(siteSettings?.homeContactEmail || 'secretaria@mepes.org.br');
-  const [homeContactAddress, setHomeContactAddress] = useState(siteSettings?.homeContactAddress || 'Anchieta e Unidades EFAs no ES');
+  const [homeContactPhone, setHomeContactPhone] = useState(siteSettings?.homeContactPhone || `Atendimento: ${EFABE_PHONE}`);
+  const [homeContactEmail, setHomeContactEmail] = useState(siteSettings?.homeContactEmail || EFABE_EMAIL);
+  const [homeContactAddress, setHomeContactAddress] = useState(siteSettings?.homeContactAddress || EFABE_ADDRESS);
   const [homeContactFormTitle, setHomeContactFormTitle] = useState(siteSettings?.homeContactFormTitle || 'Ficha de Contato & Pré-Inscrição');
   const [homeContactButtonText, setHomeContactButtonText] = useState(siteSettings?.homeContactButtonText || 'Enviar Pré-Inscrição');
 
@@ -1282,7 +1283,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={siteForm.footerAddress}
                       onChange={(e) => setSiteForm({ ...siteForm, footerAddress: e.target.value })}
-                      placeholder="Ex: Anchieta & Unidades Regionais, ES"
+                      placeholder={EFABE_ADDRESS}
                       className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden"
                     />
                   </div>
@@ -1296,7 +1297,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={siteForm.footerPhone}
                       onChange={(e) => setSiteForm({ ...siteForm, footerPhone: e.target.value })}
-                      placeholder="Ex: (28) 3536-1200 / (27) 99881-2200"
+                      placeholder={EFABE_PHONE}
                       className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden"
                     />
                   </div>
@@ -1310,7 +1311,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={siteForm.footerEmail}
                       onChange={(e) => setSiteForm({ ...siteForm, footerEmail: e.target.value })}
-                      placeholder="Ex: contato@mepes.org.br"
+                      placeholder={EFABE_EMAIL}
                       className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden"
                     />
                   </div>
@@ -1324,7 +1325,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="text"
                       value={siteForm.footerWebsite}
                       onChange={(e) => setSiteForm({ ...siteForm, footerWebsite: e.target.value })}
-                      placeholder="Ex: www.mepes.org.br"
+                      placeholder="Endereço do site (opcional)"
                       className="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-hidden"
                     />
                   </div>
@@ -1468,7 +1469,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
                 {homeSectionOrder.map((secKey, idx) => {
                   const secLabels: Record<string, { title: string; color: string }> = {
-                    pillars: { title: '1. Pilares do MEPES', color: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+                    pillars: { title: '1. Pilares da EFABE', color: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
                     courses: { title: '2. Formação Profissional', color: 'bg-blue-100 text-blue-900 border-blue-300' },
                     notices: { title: '3. Últimos Comunicados', color: 'bg-amber-100 text-amber-900 border-amber-300' },
                     photos: { title: '4. Galeria de Fotos', color: 'bg-purple-100 text-purple-900 border-purple-300' },
@@ -1567,9 +1568,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
-            {/* SEÇÃO 1: BLOCO PILARES DO MEPES */}
+            {/* SEÇÃO 1: BLOCO PILARES DA EFABE */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6">
-              {renderSectionHeader('homePillars', '1. BLOCO PILARES DO MEPES', 'pillars')}
+              {renderSectionHeader('homePillars', '1. BLOCO PILARES DA EFABE', 'pillars')}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

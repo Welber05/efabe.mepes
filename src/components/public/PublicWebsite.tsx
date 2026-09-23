@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PageContent, Notice, RoutinePhoto, User, SiteHeaderFooterSettings } from '../../types';
 import { RichTextRenderer } from '../common/RichTextRenderer';
 import { ProfessionalBlockRenderer } from '../cms/ProfessionalBlockRenderer';
+import { EFABE_ADDRESS, EFABE_EMAIL, EFABE_PHONE } from '../../site/efabeContact';
 import { 
   GraduationCap, 
   Sprout, 
@@ -84,7 +85,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="text-emerald-700 font-extrabold text-[10px] uppercase tracking-widest bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
-            {siteSettings?.homePillarsBadge || 'Pilares do MEPES'}
+            {siteSettings?.homePillarsBadge || 'Pilares da EFABE'}
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             {siteSettings?.homePillarsTitle || 'Educação do Campo que Transforma Vidas e Propriedades'}
@@ -268,15 +269,15 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
             <div className="space-y-2 text-xs text-emerald-200 pt-2">
               <p className="flex items-center gap-2">
                 <PhoneCall size={16} className="text-amber-400 shrink-0" />
-                <span>{siteSettings?.homeContactPhone || 'Atendimento: (28) 3536-1200 / (27) 99881-2200'}</span>
+                <span>{siteSettings?.homeContactPhone || `Atendimento: ${EFABE_PHONE}`}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail size={16} className="text-amber-400 shrink-0" />
-                <span>{siteSettings?.homeContactEmail || 'secretaria@mepes.org.br'}</span>
+                <span>{siteSettings?.homeContactEmail || EFABE_EMAIL}</span>
               </p>
               <p className="flex items-center gap-2">
                 <MapPin size={16} className="text-amber-400 shrink-0" />
-                <span>{siteSettings?.homeContactAddress || 'Anchieta e Unidades EFAs no ES'}</span>
+                <span>{siteSettings?.homeContactAddress || EFABE_ADDRESS}</span>
               </p>
             </div>
           </div>
