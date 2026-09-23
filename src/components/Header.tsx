@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { User, MenuItem, SiteHeaderFooterSettings } from '../types';
 import { canAccess, canAccessAdmin } from '../auth/access';
 import { publicAssetUrl } from '../lib/publicAsset';
@@ -49,6 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [hoveredMenuPath, setHoveredMenuPath] = useState<string[]>([]);
+  const [flyoutTops, setFlyoutTops] = useState<number[]>([]);
+  const menuBodyRef = useRef<HTMLDivElement>(null);
 
   // Fallback defaults
   const settings = siteSettings || {
@@ -87,6 +89,19 @@ export const Header: React.FC<HeaderProps> = ({
     if (!children.length) break;
     menuColumns.push(children);
   }
+
+  const revealMenuChildren = (item: MenuItem, depth: number, row: HTMLElement) => {
+    setHoveredMenuPath((path) => path[depth] === item.id && path.length === depth + 1 ? path : [...path.slice(0, depth), item.id]);
+    const body = menuBodyRef.current;
+    const children = getSubMenuItems(item.id);
+    if (!body || !children.length) return;
+    const bodyTop = body.getBoundingClientRect().top;
+    const rowTop = row.getBoundingClientRect().top - bodyTop;
+    const estimatedHeight = Math.min(420, children.length * 34 + 16);
+    const availableHeight = window.innerHeight - bodyTop - 12;
+    const top = Math.max(0, Math.min(rowTop, availableHeight - estimatedHeight));
+    setFlyoutTops((tops) => tops[depth] === top ? tops : [...tops.slice(0, depth), top]);
+  };
 
   const getMenuIcon = (slug: string) => {
     switch (slug) {
@@ -317,16 +332,16 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 {/* Only the first level appears initially; each hovered item reveals one next level. */}
-                <div className="relative">
-                  {menuColumns.map((column, depth) => <div key={depth} style={depth ? { right: `calc(100% + ${(depth - 1) * 170}px)` } : undefined} className={`${depth ? 'absolute top-0 w-[170px] shadow-xl' : 'w-full'} max-h-[420px] bg-slate-50/95 rounded-2xl border border-slate-200/80 p-2 overflow-y-auto`}>
+                <div className="relative" ref={menuBodyRef}>
+                  {menuColumns.map((column, depth) => <div key={depth} style={depth ? { right: `calc(100% + ${(depth - 1) * 170}px)`, top: flyoutTops[depth - 1] ?? 0 } : undefined} className={`${depth ? 'absolute w-[170px] shadow-xl' : 'w-full'} max-h-[420px] bg-slate-50/95 rounded-2xl border border-slate-200/80 p-2 overflow-y-auto`}>
                     {column.map((item) => {
                       const children = depth < 4 ? getSubMenuItems(item.id) : [];
                       const selected = hoveredMenuPath[depth] === item.id;
-                      return <div key={item.id} className={`flex items-center rounded-xl ${selected || activeTab === item.slug ? 'bg-emerald-100 text-emerald-950' : 'hover:bg-white text-slate-800'}`} onMouseEnter={() => setHoveredMenuPath((path) => path[depth] === item.id && path.length === depth + 1 ? path : [...path.slice(0, depth), item.id])}>
+                      return <div key={item.id} className={`flex items-center rounded-xl ${selected || activeTab === item.slug ? 'bg-emerald-100 text-emerald-950' : 'hover:bg-white text-slate-800'}`} onMouseEnter={(event) => revealMenuChildren(item, depth, event.currentTarget)}>
                         <button type="button" onClick={() => { setActiveTab(item.slug); setMegaMenuOpen(false); setHoveredMenuPath([]); }} className="min-w-0 flex-1 flex items-center gap-2 px-2 py-2 text-left text-xs font-semibold">
                           {depth === 0 && getMenuIcon(item.slug)}<span className="truncate" title={item.label}>{item.label}</span>
                         </button>
-                        {!!children.length && <button type="button" onClick={() => setHoveredMenuPath((path) => [...path.slice(0, depth), item.id])} title={`Abrir submenus de ${item.label}`} aria-label={`Abrir submenus de ${item.label}`} className="p-2 text-emerald-800"><ChevronDown size={13} className="-rotate-90" /></button>}
+                        {!!children.length && <button type="button" onClick={(event) => revealMenuChildren(item, depth, event.currentTarget.parentElement!)} title={`Abrir submenus de ${item.label}`} aria-label={`Abrir submenus de ${item.label}`} className="p-2 text-emerald-800"><ChevronDown size={13} className="-rotate-90" /></button>}
                       </div>;
                     })}
                   </div>)}
