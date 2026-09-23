@@ -326,9 +326,6 @@ export const Header: React.FC<HeaderProps> = ({
                       <p className="text-[11px] text-slate-500">Navegue por todas as seções e páginas da EFABE</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full border border-emerald-200">
-                    EFABE • {topLevelMenuItems.length} Seções
-                  </span>
                 </div>
 
                 {/* Only the first level appears initially; each hovered item reveals one next level. */}
@@ -418,15 +415,12 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2.5">
+                      <button type="button" onClick={() => { onOpenLogin(); setMegaMenuOpen(false); }} className="flex items-center gap-2.5 cursor-pointer" aria-label="Login">
                         <div className="p-2 bg-emerald-100 text-[#0f5238] rounded-xl shrink-0">
                           <LogIn size={18} />
                         </div>
-                        <div>
-                          <div className="text-xs font-extrabold text-slate-900 font-heading">Acesso Restrito ao Sistema</div>
-                          <div className="text-[11px] text-slate-500 font-body">Login para Administradores, Professores, Pais e Alunos</div>
-                        </div>
-                      </div>
+                        <span className="text-xs font-extrabold text-slate-900 font-heading">Login</span>
+                      </button>
 
                       <button
                         onClick={() => {
@@ -435,8 +429,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         className="px-4 py-2 bg-[#006837] hover:bg-[#0f5238] text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-xs cursor-pointer border border-emerald-600 transition-all hover:scale-105"
                       >
-                        <LogIn size={15} />
-                        <span>Entrar no Sistema</span>
+                        <span>Acesso</span>
                       </button>
                     </div>
                   )}
