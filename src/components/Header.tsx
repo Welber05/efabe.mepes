@@ -48,6 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [hoveredMenuPath, setHoveredMenuPath] = useState<string[]>([]);
 
   // Fallback defaults
   const settings = siteSettings || {
@@ -79,6 +80,13 @@ export const Header: React.FC<HeaderProps> = ({
       .filter((m) => m.parentId === parentId && m.visible)
       .sort((a, b) => a.order - b.order);
   };
+
+  const menuColumns: MenuItem[][] = [topLevelMenuItems];
+  for (const id of hoveredMenuPath.slice(0, 4)) {
+    const children = getSubMenuItems(id);
+    if (!children.length) break;
+    menuColumns.push(children);
+  }
 
   const getMenuIcon = (slug: string) => {
     switch (slug) {
@@ -270,9 +278,9 @@ export const Header: React.FC<HeaderProps> = ({
             </nav>
 
             {/* 3. Menu Completo (Três Linhas Empilhadas) à DIREITA */}
-            <div className="relative group shrink-0">
+            <div className="relative group shrink-0" onMouseLeave={() => setHoveredMenuPath([])}>
               <button
-                onClick={() => setMegaMenuOpen(!megaMenuOpen)}
+                onClick={() => { setMegaMenuOpen(!megaMenuOpen); setHoveredMenuPath([]); }}
                 className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer border shadow-xs ${
                   megaMenuOpen
                     ? 'bg-[#006837] text-white border-emerald-700 ring-2 ring-emerald-500'
@@ -287,7 +295,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {/* Mega-Menu Panel on Hover or Click */}
-              <div className={`absolute top-full right-0 mt-2 w-[680px] bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-5 z-50 transition-all duration-200 ${
+              <div style={{ width: `min(${Math.max(320, menuColumns.length * 210 + 40)}px, calc(100vw - 2rem))` }} className={`absolute top-full right-0 mt-2 bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-5 z-50 transition-all duration-200 ${
                 megaMenuOpen
                   ? 'opacity-100 pointer-events-auto translate-y-0'
                   : 'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto translate-y-1'
@@ -308,40 +316,21 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 </div>
 
-                {/* Grid of All Top Level Items & Submenus */}
-                <div className="grid grid-cols-3 gap-3.5 max-h-[400px] overflow-y-auto pr-1">
-                  {topLevelMenuItems.map((item) => {
-                    const subItems = getSubMenuItems(item.id);
-                    const hasSub = subItems.length > 0;
-
-                    return (
-                      <div key={item.id} className="bg-slate-50/90 rounded-2xl p-2.5 border border-slate-200/80 hover:border-emerald-300 transition-colors flex flex-col justify-between">
-                        <div>
-                          <button
-                            onClick={() => {
-                              setActiveTab(item.slug);
-                              setMegaMenuOpen(false);
-                            }}
-                            className={`w-full text-left font-extrabold text-xs flex items-center justify-between gap-1.5 p-1.5 rounded-xl transition-colors cursor-pointer ${
-                              activeTab === item.slug ? 'bg-emerald-700 text-white' : 'text-slate-900 hover:text-[#0f5238] hover:bg-emerald-100/60'
-                            }`}
-                          >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {getMenuIcon(item.slug)}
-                              <span className="truncate">{item.label}</span>
-                            </div>
-                            {hasSub && (
-                              <span className="text-[9px] font-extrabold bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded-md shrink-0">
-                                {subItems.length}
-                              </span>
-                            )}
-                          </button>
-
-                          {hasSub && <div className="mt-2"><MenuBranch items={menuItems} parentId={item.id} variant="mega" activeSlug={activeTab} onNavigate={(slug) => { setActiveTab(slug); setMegaMenuOpen(false); }} /></div>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* Only the first level appears initially; each hovered item reveals one next level. */}
+                <div className="flex gap-2 max-h-[420px] overflow-x-auto overflow-y-hidden">
+                  {[...menuColumns].reverse().map((column, reverseIndex) => { const depth = menuColumns.length - reverseIndex - 1; return <div key={depth} className="min-w-[190px] flex-1 max-h-[420px] bg-slate-50/90 rounded-2xl border border-slate-200/80 p-2 overflow-y-auto">
+                    <p className="px-2 py-1 mb-1 text-[10px] font-extrabold text-emerald-800 uppercase">{depth + 1}ª via</p>
+                    {column.map((item) => {
+                      const children = depth < 4 ? getSubMenuItems(item.id) : [];
+                      const selected = hoveredMenuPath[depth] === item.id;
+                      return <div key={item.id} className={`flex items-center rounded-xl ${selected || activeTab === item.slug ? 'bg-emerald-100 text-emerald-950' : 'hover:bg-white text-slate-800'}`} onMouseEnter={() => setHoveredMenuPath((path) => [...path.slice(0, depth), item.id])}>
+                        <button type="button" onClick={() => { setActiveTab(item.slug); setMegaMenuOpen(false); setHoveredMenuPath([]); }} className="min-w-0 flex-1 flex items-center gap-2 px-2 py-2 text-left text-xs font-semibold">
+                          {depth === 0 && getMenuIcon(item.slug)}<span className="truncate" title={item.label}>{item.label}</span>
+                        </button>
+                        {!!children.length && <button type="button" onClick={() => setHoveredMenuPath((path) => [...path.slice(0, depth), item.id])} title={`Abrir submenus de ${item.label}`} aria-label={`Abrir submenus de ${item.label}`} className="p-2 text-emerald-800"><ChevronDown size={13} className="-rotate-90" /></button>}
+                      </div>;
+                    })}
+                  </div>; })}
                 </div>
 
                 {/* Seção de Login / Acesso Restrito no rodapé do Menu Completo */}
