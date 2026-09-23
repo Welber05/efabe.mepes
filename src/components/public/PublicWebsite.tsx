@@ -384,7 +384,7 @@ export const PublicWebsite: React.FC<PublicWebsiteProps> = ({
     <div className="min-h-screen bg-slate-50 text-slate-800">
       
       {/* Dynamic Hero Section */}
-      {currentPage.showHero !== false && <section className="relative bg-[#0f5238] text-white overflow-hidden font-body">
+      {currentPage.showHero !== false && <section className="relative bg-[#0f5238] text-white overflow-hidden font-body border-t-4 border-[#e9c46a]">
         {/* Background Image with Dark Gradient Overlay */}
         <div className="absolute inset-0 z-0">
           <img
