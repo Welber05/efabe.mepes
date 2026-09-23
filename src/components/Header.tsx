@@ -419,7 +419,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <div className="p-2 bg-emerald-100 text-[#0f5238] rounded-xl shrink-0">
                           <LogIn size={18} />
                         </div>
-                        <span className="text-xs font-extrabold text-slate-900 font-heading">Login</span>
+                        <span className="text-xs font-extrabold text-slate-900 font-heading">Sair</span>
                       </button>
 
                       <button
